@@ -196,8 +196,8 @@ function getMeasureText(value, ctx, fontset){
         }
 
         let measureText = ctx.measureText(value), cache = {};
-        var regu = "^[ ]+$";
-        var re = new RegExp(regu);
+        // var regu = "^[ ]+$";
+        // var re = new RegExp(regu);
         // if(measureText.actualBoundingBoxRight==null || re.test(value)){
         //     cache.width = measureText.width;
         // }
@@ -235,6 +235,37 @@ function getMeasureText(value, ctx, fontset){
 
             //console.log(value, oneLineTextHeight, measureText.actualBoundingBoxDescent+measureText.actualBoundingBoxAscent,ctx.font);
         }
+
+        if(ctx.textBaseline == 'alphabetic'){
+            let descText = "gjpqy", matchText="abcdABCD";
+            let descTextMeasure = Store.measureTextCache[descText + "_" + ctx.font];
+            if(fontset!=null){
+                descTextMeasure = Store.measureTextCache[descText + "_" + fontset];
+            }
+
+            let matchTextMeasure = Store.measureTextCache[matchText + "_" + ctx.font];
+            if(fontset!=null){
+                matchTextMeasure = Store.measureTextCache[matchText + "_" + fontset];
+            }
+
+            if(descTextMeasure == null){
+                descTextMeasure = ctx.measureText(descText);
+            }
+
+            if(matchTextMeasure == null){
+                matchTextMeasure = ctx.measureText(matchText);
+            }
+
+            if(cache.actualBoundingBoxDescent<=matchTextMeasure.actualBoundingBoxDescent){
+                cache.actualBoundingBoxDescent = descTextMeasure.actualBoundingBoxDescent;
+                if(cache.actualBoundingBoxDescent==null){
+                    cache.actualBoundingBoxDescent = 0;
+                }
+            }
+
+
+        }
+
         cache.width *= Store.zoomRatio;
         cache.actualBoundingBoxDescent *= Store.zoomRatio;
         cache.actualBoundingBoxAscent *= Store.zoomRatio;
@@ -721,7 +752,7 @@ function getCellTextInfo(cell , ctx, option){
                             sc.measureText = getMeasureText(sc.v, ctx, sc.fontset);
                         }
                         textWidth += sc.measureText.width;
-                        textHeight += sc.measureText.actualBoundingBoxAscent+sc.measureText.actualBoundingBoxDescent;
+                        textHeight = Math.max(sc.measureText.actualBoundingBoxAscent+sc.measureText.actualBoundingBoxDescent);
                         // console.log(sc.v,sc.measureText.width,sc.measureText.actualBoundingBoxAscent,sc.measureText.actualBoundingBoxDescent);
                     }
     
@@ -740,7 +771,7 @@ function getCellTextInfo(cell , ctx, option){
     
                     if(rt!=0){//rotate
                         // console.log("all",anchor, i , str);
-                        // console.log(height,space_height, cellHeight);
+                        console.log(height,space_height, cellHeight, shareCells,(height+space_height)>cellHeight);
                         if((height+space_height)>cellHeight && text_all_split[splitIndex]!=null && tb=="2" && i!= inlineStringArr.length){
                             // console.log("cut",anchor, i , str);
 
@@ -928,14 +959,16 @@ function getCellTextInfo(cell , ctx, option){
                     let height = textWidth * Math.sin(rt*Math.PI/180) + textHeight * Math.cos(rt*Math.PI/180);//consider text box wdith and line height
                     let lastWord = str.substr(str.length-1,1);
                     if(lastWord==" " || checkWordByteLength(lastWord)==2){
-                        spaceOrTwoByte = {
-                            index:i,
-                            str:preStr,
-                            width:preTextWidth,
-                            height:preTextHeight,
-                            asc:preMeasureText.actualBoundingBoxAscent,
-                            desc:preMeasureText.actualBoundingBoxDescent,
-                        };
+                        if(preMeasureText!=null){
+                            spaceOrTwoByte = {
+                                index:i,
+                                str:preStr,
+                                width:preTextWidth,
+                                height:preTextHeight,
+                                asc:preMeasureText.actualBoundingBoxAscent,
+                                desc:preMeasureText.actualBoundingBoxDescent,
+                            };
+                        }
 
                     }
                     // textW_all += textW;

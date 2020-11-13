@@ -43,7 +43,14 @@ const babelConfig = {
     plugins: [
     ],
     presets: [
-        '@babel/preset-env'
+        ['@babel/preset-env', {
+            useBuiltIns: 'usage',
+            corejs: 3,
+            targets: {
+                chrome: 58,
+                ie: 11
+            }
+        }]
     ]
 };
 
@@ -68,7 +75,7 @@ const paths = {
     destStaticCssImages: ['dist/css'],
 
     //core es module
-    core: ['src/**/*.js','!src/demoData/*.js','src/expendPlugins/**/plugin.js','!src/plugins/js/*.js'], 
+    core: ['src/**/*.js','!src/demoData/*.js','src/expendPlugins/**/plugin.js','!src/plugins/js/*.js'],
 
      //plugins src
     pluginsCss: ['src/plugins/css/*.css'],
@@ -98,7 +105,7 @@ const paths = {
     concatPlugins: 'plugins.css',
     concatCss: 'luckysheet.css',
     concatPluginsJs: 'plugin.js',
-    
+
     //plugins dest
     destPluginsCss: ['dist/plugins/css'],
     destPlugins: ['dist/plugins'],
@@ -119,7 +126,8 @@ function serve(done) {
     browserSync.init({
         server: {
             baseDir: paths.dist
-        }
+        },
+        ghostMode: false, //默认true，滚动和表单在任何设备上输入将被镜像到所有设备里，会影响本地的协同编辑消息，故关闭
     }, done)
 }
 
@@ -187,7 +195,7 @@ async function core() {
             inlineDynamicImports:true,
         });
     }
-    
+
 }
 
 // According to the build tag in html, package js and css
@@ -196,7 +204,7 @@ function pluginsCss() {
         .pipe(concat(paths.concatPluginsCss))
         .pipe(gulpif(production, cleanCSS()))
         .pipe(dest(paths.destPluginsCss))
-    
+
 }
 
 function plugins() {
