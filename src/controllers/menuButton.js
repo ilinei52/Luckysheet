@@ -1,5 +1,6 @@
 import { selectionCopyShow, selectIsOverlap } from './select';
 import { luckyColor, iconfontObjects } from './constant';
+import luckysheetConfigsetting from './luckysheetConfigsetting';
 import luckysheetMoreFormat from './moreFormat';
 import alternateformat from './alternateformat';
 import conditionformat from './conditionformat';
@@ -36,6 +37,7 @@ import { replaceHtml, getObjType, rgbTohex, mouseclickposition, luckysheetfontfo
 import {openProtectionModal,checkProtectionFormatCells,checkProtectionNotEnable} from './protection';
 import Store from '../store';
 import locale from '../locale/locale';
+import {checkTheStatusOfTheSelectedCells} from '../global/api';
 
 const menuButton = {
     "menu": '<div class="luckysheet-cols-menu luckysheet-rightgclick-menu luckysheet-menuButton ${subclass} luckysheet-mousedown-cancel" id="luckysheet-icon-${id}-menuButton">${item}</div>',
@@ -46,7 +48,7 @@ const menuButton = {
     "coloritem": '<div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel ${class}"><div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${name}</div></div>',
     "subcolor": '<div id="luckysheet-icon-${id}-menuButton" class="luckysheet-cols-menu luckysheet-rightgclick-menu luckysheet-rightgclick-menu-sub luckysheet-menuButton-sub luckysheet-mousedown-cancel"> <div class="luckysheet-mousedown-cancel"> <div class="luckysheet-mousedown-cancel"> <input type="text" class="luckysheet-color-selected" /> </div> </div></div>',
     "rightclickmenu": null,
-    "submenuhide": null,
+    "submenuhide": {},
     focus: function($obj, value){
         if($obj.attr("id")=="luckysheet-icon-font-family-menuButton"){
             if (isdatatypemulti(value)["num"]) {
@@ -116,8 +118,8 @@ const menuButton = {
         let _this = this;
 
         //格式刷
-        $("#luckysheet-icon-paintformat").click(function(){
-
+        $("#luckysheet-icon-paintformat").click(function(e){
+            e.stopPropagation();
             let _locale = locale();
             let locale_paint = _locale.paint;
 
@@ -430,12 +432,13 @@ const menuButton = {
                 //luckysheet-icon-fmt-other-menuButton_sub
                 $("body").append(menu+submenu);
                 $menuButton = $("#" + menuButtonId).width(250);
+                _this.focus($menuButton);
 
                 $menuButton.find(".luckysheet-cols-menuitem").click(function(){
                     $menuButton.hide();
                     luckysheetContainerFocus();
 
-                    let $t = $(this), itemvalue = $t.attr("itemvalue"),itemname = $t.attr("itemname");;
+                    let $t = $(this), itemvalue = $t.attr("itemvalue"),itemname = $t.attr("itemname");
                     $("#luckysheet-icon-fmt-other").find(".luckysheet-toolbar-menu-button-caption").html(" "+ itemname +" ");
 
                     if(itemvalue == "fmtOtherSelf"){
@@ -584,7 +587,7 @@ const menuButton = {
                     togglePaletteLessText: locale_toolbar.collapse,
                     togglePaletteOnly: true,
                     clearText: locale_toolbar.clearText,
-                    color:"#000",
+                    color: luckysheetConfigsetting.defaultTextColor,
                     noColorSelectedText: locale_toolbar.noColorSelectedText,
                     localStorageKey: "spectrum.textcolor" + server.gridKey,
                     palette: [["#000","#444","#666","#999","#ccc","#eee","#f3f3f3","#fff"],
@@ -716,7 +719,7 @@ const menuButton = {
                     showSelectionPalette: true,
                     maxPaletteSize: 8,
                     maxSelectionSize: 8,
-                    color: "#fff",
+                    color: luckysheetConfigsetting.defaultCellColor,
                     cancelText: locale_button.cancel,
                     chooseText: locale_button.confirm,
                     togglePaletteMoreText: locale_toolbar.customColor,
@@ -956,13 +959,13 @@ const menuButton = {
                 "borderType": type,
                 "color": color,
                 "style": style,
-                "range": Store.luckysheet_select_save
+                "range": $.extend(true, [], Store.luckysheet_select_save)
             }
 
             cfg["borderInfo"].push(borderInfo);
 
             if (Store.clearjfundo) {
-                Store.jfundo = [];
+                Store.jfundo.length  = 0;
 
                 let redo = [];
 
@@ -1115,13 +1118,13 @@ const menuButton = {
                         "borderType": itemvalue,
                         "color": color,
                         "style": style,
-                        "range": Store.luckysheet_select_save
+                        "range": $.extend(true, [], Store.luckysheet_select_save)
                     }
 
                     cfg["borderInfo"].push(borderInfo);
 
                     if (Store.clearjfundo) {
-                        Store.jfundo = [];
+                        Store.jfundo.length  = 0;
 
                         let redo = [];
 
@@ -1924,7 +1927,7 @@ const menuButton = {
                 let itemdata = [
                     {"text": locale_findAndReplace.find+" ...", "value": "search", "example": '<i class="iconfont luckysheet-iconfont-sousuo" aria-hidden="true"></i>'},
                     {"text": locale_findAndReplace.replace+" ...", "value": "replace", "example": '<i class="iconfont luckysheet-iconfont-tihuan" aria-hidden="true"></i>'},
-                    {"text": locale_findAndReplace.goto+" ...", "value": "goto", "example": '<i class="iconfont luckysheet-iconfont-zhuandao1" aria-hidden="true"></i>'},
+                    // {"text": locale_findAndReplace.goto+" ...", "value": "goto", "example": '<i class="iconfont luckysheet-iconfont-zhuandao1" aria-hidden="true"></i>'},
                     {"text": "", "value": "split", "example": ""},
                     {"text": locale_findAndReplace.location+" ...", "value": "location", "example": '<i class="iconfont luckysheet-iconfont-dingwei" aria-hidden="true"></i>'},
                     {"text": locale_findAndReplace.formula, "value": "locationFormula", "example": locale_findAndReplace.locationExample},
@@ -2168,19 +2171,11 @@ const menuButton = {
             e.stopPropagation();
         }).click(function(e){
             let d = editor.deepCopyFlowData(Store.flowdata);
-            let row_index = Store.luckysheet_select_save[0]["row_focus"], 
-                col_index = Store.luckysheet_select_save[0]["column_focus"];
-            let foucsStatus = _this.checkstatus(d, row_index, col_index, "bl");
-
-            if(foucsStatus == 1){
-                foucsStatus = 0;
-            }
-            else{
-                foucsStatus = 1;
-            }
+            
+            let flag = checkTheStatusOfTheSelectedCells("bl",1);
+            let foucsStatus = flag ? 0 : 1;
 
             _this.updateFormat(d, "bl", foucsStatus);
-            _this.menuButtonFocus(d, row_index, col_index);
         });
 
         //斜体
@@ -2189,19 +2184,11 @@ const menuButton = {
             e.stopPropagation();
         }).click(function(){
             let d = editor.deepCopyFlowData(Store.flowdata);
-            let row_index = Store.luckysheet_select_save[0]["row_focus"], 
-                col_index = Store.luckysheet_select_save[0]["column_focus"];
-            let foucsStatus = _this.checkstatus(d, row_index, col_index, "it");
 
-            if(foucsStatus == 1){
-                foucsStatus = 0;
-            }
-            else{
-                foucsStatus = 1;
-            }
+            let flag = checkTheStatusOfTheSelectedCells("it",1);
+            let foucsStatus = flag ? 0 : 1;
 
             _this.updateFormat(d, "it", foucsStatus);
-            _this.menuButtonFocus(d, row_index, col_index);
         });
 
         //删除线
@@ -2210,19 +2197,10 @@ const menuButton = {
             e.stopPropagation();
         }).click(function(){
             let d = editor.deepCopyFlowData(Store.flowdata);
-            let row_index = Store.luckysheet_select_save[0]["row_focus"], 
-                col_index = Store.luckysheet_select_save[0]["column_focus"];
-            let foucsStatus = _this.checkstatus(d, row_index, col_index, "cl");
-
-            if(foucsStatus == 1){
-                foucsStatus = 0;
-            }
-            else{
-                foucsStatus = 1;
-            }
+            let flag = checkTheStatusOfTheSelectedCells("cl",1);
+            let foucsStatus = flag ? 0 : 1;
 
             _this.updateFormat(d, "cl", foucsStatus);
-            _this.menuButtonFocus(d, row_index, col_index);
         });
 
         //下划线
@@ -2231,19 +2209,10 @@ const menuButton = {
             e.stopPropagation();
         }).click(function(){
             let d = editor.deepCopyFlowData(Store.flowdata);
-            let row_index = Store.luckysheet_select_save[0]["row_focus"], 
-                col_index = Store.luckysheet_select_save[0]["column_focus"];
-            let foucsStatus = _this.checkstatus(d, row_index, col_index, "un");
-
-            if(foucsStatus == 1){
-                foucsStatus = 0;
-            }
-            else{
-                foucsStatus = 1;
-            }
+            let flag = checkTheStatusOfTheSelectedCells("un",1);
+            let foucsStatus = flag ? 0 : 1;
 
             _this.updateFormat(d, "un", foucsStatus);
-            _this.menuButtonFocus(d, row_index, col_index);
         });
 
         //条件格式
@@ -2430,10 +2399,10 @@ const menuButton = {
                             }
 
                             $.post(loadSheetUrl, {"gridKey" : server.gridKey, "index": sheetindex.join(",")}, function (d) {
-                                let dataset = eval("(" + d + ")");
+                                let dataset = new Function("return " + d)();
 
                                 setTimeout(function(){
-                                    $("#luckysheetloadingdata").fadeOut().remove();
+                                    Store.loadingObj.close()
                                 }, 500);
 
                                 for(let item in dataset){
@@ -2874,7 +2843,7 @@ const menuButton = {
             }
             mouseclickposition($menuButton, menuleft, $(this).offset().top + 25, "lefttop");
         });
-
+        
         $("body").on("mouseover mouseleave",".luckysheet-menuButton .luckysheet-cols-submenu", function(e){
             let $t = $(this), attrid = $t.attr("itemvalue"), 
                 $attr = $("#luckysheet-icon-" + attrid + "-menuButton");
@@ -2897,13 +2866,13 @@ const menuButton = {
                 $attr.css({ "top": top, "left": left }).show();
                 _this.rightclickmenu = $t;
             } else {
-                clearTimeout(_this.submenuhide);
-                _this.submenuhide = setTimeout(function () { $attr.hide(); }, 200);
+                clearTimeout(_this.submenuhide[$attr.attr('id')]);
+                _this.submenuhide[$attr.attr('id')] = setTimeout(function () { $attr.hide(); }, 200);
             }
         }).on("mouseover mouseleave",".luckysheet-menuButton-sub", function(e){
             if (e.type === "mouseover") {
                 _this.rightclickmenu.addClass("luckysheet-cols-menuitem-hover");
-                clearTimeout(_this.submenuhide);
+                clearTimeout(_this.submenuhide[$(this).attr('id')]);
             } 
             else {
                 _this.rightclickmenu.removeClass("luckysheet-cols-menuitem-hover");
@@ -3011,7 +2980,8 @@ const menuButton = {
                         type = "s"
                     }
                     else if(foucsStatus == "General" || foucsStatus === 0){
-                        type = "g";
+                        // type = "g"; 
+                        type = isRealNum(value) ? "n" : "g";
                     }
 
                     if (getObjType(cell) == "object") {
@@ -3202,7 +3172,8 @@ const menuButton = {
                                 fv[mc_r + "_" + mc_c] = $.extend(true, {}, cell);
                             }
                             else{
-                                let cell_clone = fv[mc_r + "_" + mc_c];
+                                // let cell_clone = fv[mc_r + "_" + mc_c];
+                                let cell_clone = JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c]));
 
                                 delete cell_clone.v;
                                 delete cell_clone.m;
@@ -3263,7 +3234,8 @@ const menuButton = {
                                     fv[mc_r + "_" + mc_c] = $.extend(true, {}, cell);
                                 }
                                 else{
-                                    let cell_clone = fv[mc_r + "_" + mc_c];
+                                // let cell_clone = fv[mc_r + "_" + mc_c];
+                                let cell_clone = JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c]));
 
                                     delete cell_clone.v;
                                     delete cell_clone.m;
@@ -3356,7 +3328,7 @@ const menuButton = {
         }
 
         if (Store.clearjfundo) {
-            Store.jfundo = [];
+            Store.jfundo.length  = 0;
             Store.jfredo.push({
                 "type": "mergeChange",
                 "sheetIndex": Store.currentSheetIndex,
@@ -4220,23 +4192,25 @@ const menuButton = {
             let cell = null;
 
             if(type == "c"){
-                cell = d[ed_m][fix];
+                cell = d[ed_m + 1][fix];
             }
             else{
-                cell = d[fix][ed_m];
+                cell = d[fix][ed_m + 1];
             }
 
+            /* 备注：在搜寻的时候排除自己以解决单元格函数引用自己的问题 */
             if(cell != null && cell.v != null && cell.v.toString().length > 0){
-                let c = ed_m;
+                let c = ed_m + 1;
 
                 if(type == "c"){
-                    cell = d[ed_m][fix];
+                    cell = d[ed_m + 1][fix];
                 }
                 else{
-                    cell = d[fix][ed_m];
+                    cell = d[fix][ed_m + 1];
                 }
 
                 while ( cell != null && cell.v != null && cell.v.toString().length > 0) {
+                    
                     c++;
                     let len = null;
                     
@@ -4268,10 +4242,10 @@ const menuButton = {
             }
             else{
                 if(type == "c"){
-                    _this.backFormulaInput(d, ed_m, fix, [st_m, ed_m], [fix ,fix], formula);
+                    _this.backFormulaInput(d, ed_m + 1, fix, [st_m, ed_m], [fix ,fix], formula);
                 }
                 else{
-                    _this.backFormulaInput(d, fix, ed_m, [fix ,fix], [st_m, ed_m], formula);
+                    _this.backFormulaInput(d, fix, ed_m + 1, [fix ,fix], [st_m, ed_m], formula);
                 }
             }
         }
@@ -4540,7 +4514,7 @@ const menuButton = {
             document.fonts && document.fonts.ready.then(function() {
                 // Any operation that needs to be done only after all the fonts
                 // have finished loading can go here.
-                console.log("font ready");
+                // console.log("font ready");
             });
         }
 

@@ -10,7 +10,7 @@ Luckysheet ，一款纯前端类似excel的在线表格，功能强大、配置�
 
 ## 在线案例
 
-- [协同编辑Demo](http://luckysheet.lashuju.com/demo/)（注意：官方Java后台待整理后也会开源，采用OT算法。请大家别操作频繁，防止搞崩服务器）
+- [协同编辑Demo](http://luckysheet.lashuju.com/demo/)
 
 ## 特性
 
@@ -26,7 +26,7 @@ Luckysheet ，一款纯前端类似excel的在线表格，功能强大、配置�
 
 ### 🧬单元格
 + **拖拽选取来修改单元格** (对选区进行操作，可以拖动四边来移动选区，也可以在右下角对选区进行下拉填充操作)
-+ **选取下拉填充** (对于一个1,2,3,4,5的序列，将会按照间隔为1进行下拉填充，而对2,4,6,8将会以2作为间隔。支持等差数列，等比数列，日期，周，天，月，年，中文数字填充)
++ **选区下拉填充** (对于一个1,2,3,4,5的序列，将会按照间隔为1进行下拉填充，而对2,4,6,8将会以2作为间隔。支持等差数列，等比数列，日期，周，天，月，年，中文数字填充)
 + **自动填充选项** (下拉填充后，会出现填充选项的菜单，支持选择复制，序列，仅格式，只填充格式，天，月，年的选择)
 + **多选区操作** (可以按住Ctrl键进行单元格多选操作，支持多选区的复制粘贴)
 + **查找和替换** (对内容进行查找替换，支持正则表达式，整词，大小写敏感)
@@ -125,15 +125,19 @@ npm run build
 
 #### CDN
 ```html
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/css/pluginsCss.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/plugins.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/css/luckysheet.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet/dist/assets/iconfont/iconfont.css' />
-<script src="https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/js/plugin.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luckysheet/dist/luckysheet.umd.js"></script>
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
 ```
 
-注意，`https://cdn.jsdelivr.net/npm/luckysheet/dist/luckysheet.umd.js`这个路径会拉取到最新的luckysheet代码，想要指定luckysheet版本，请在luckysheet后面加上版本号，如：`https://cdn.jsdelivr.net/npm/luckysheet@2.0.0/dist/luckysheet.umd.js`
+注意，`https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js`这个路径意思是会拉取到最新的luckysheet代码，但是如果Luckysheet刚刚发布，jsdelivr网站可能还没来得及从npm上同步过去，故而使用这个路径还是会拉到上一个版本，我们推荐您直接指定最新版本。
+
+想要指定Luckysheet版本，请在所有的CDN依赖文件后面加上版本号，如：`https://cdn.jsdelivr.net/npm/luckysheet@2.1.12/dist/luckysheet.umd.js`。
+
+> 如何知道最新版本是哪一版？查看最新 [release记录](https://github.com/mengshukeji/Luckysheet/releases) 或者 [package.json](https://github.com/mengshukeji/Luckysheet/blob/master/package.json) 的`version`字段。
 
 如果不方便访问 jsdelivr.net，还可以采用本地方式引入
 

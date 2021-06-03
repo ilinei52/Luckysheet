@@ -326,7 +326,7 @@ const method = {
                 luckysheetextendData(dataset["row"], newData);
 
                 setTimeout(function(){
-                    $("#luckysheetloadingdata").fadeOut().remove();
+                    Store.loadingObj.close()
                 }, 500);
 
                 if(func && typeof(func)=="function"){ 
@@ -354,12 +354,12 @@ const method = {
         let file = Store.luckysheetfile[getSheetIndex(index)];
 
         $.post(url, param, function (d) {
-            let dataset = eval("(" + d + ")");
+            let dataset = new Function("return " + d)();
             file.celldata = dataset[index.toString()];
             let data = sheetmanage.buildGridData(file);
 
             setTimeout(function(){
-                $("#luckysheetloadingdata").fadeOut().remove();
+                Store.loadingObj.close()
             }, 500);
 
             file["data"] = data;
@@ -369,7 +369,7 @@ const method = {
             luckysheetcreatesheet(data[0].length, data.length, data, null, false);
             file["load"] = "1";
 
-            Store.luckysheet_select_save = [];
+            Store.luckysheet_select_save.length = 0;
             Store.luckysheet_selection_range = [];
 
             server.saveParam("shs", null, Store.currentSheetIndex);
@@ -492,8 +492,8 @@ const method = {
             }
         }
 
-        
-
+        // remove proxy
+        Store.asyncLoad = ['core'];
     },
     editorChart:function(c){
         let chart_selection_color = luckyColor[0];

@@ -1,5 +1,6 @@
 const Store = {
     container: null, 
+    loadingObj:{},
     luckysheetfile: null, 
     defaultcolumnNum: 60, 
     defaultrowNum: 84, 
@@ -81,8 +82,8 @@ const Store = {
     luckysheet_cell_selected_extend_time: null,
 
     clearjfundo: true,
-    jfredo: [],
     jfundo: [],
+    jfredo: [],
     lang: 'en', //language
     createChart: '',
     highlightChart: '',
@@ -141,7 +142,28 @@ const Store = {
     cooperativeEdit:{
         usernameTimeout:{
 
-        }
+        },
+        changeCollaborationSize:[], //改变行高或者列宽时，协同提示框需要跟随改变所需数据
+        allDataColumnlen:[],//列宽发生过改变的列
+        merge_range:{},//合并时单元格信息
+        checkoutData:[],//切换表格页时所需数据
+    },
+
+    // Resources that currently need to be loaded asynchronously, especially plugins. 'Core' marks the core rendering process.
+    asyncLoad:['core'],
+    // 默认单元格
+    defaultCell: {
+        bg: null,
+        bl: 0,
+        ct: {fa: "General", t: "n"},
+        fc: "rgb(51, 51, 51)",
+        ff: 0,
+        fs: 11,
+        ht: 1,
+        it: 0,
+        vt: 1,
+        m: '',
+        v: ''
     }
 
 }
